@@ -249,6 +249,9 @@ float getDataFloat(String path) {
 
 
 void loop(){
+  if (Firebase.RTDB.getInt(&fbdo, userPath + "/on")) {
+      if (fbdo.dataType() == "bool") { turnOn = fbdo.intData(); }
+      }
 
   if (Firebase.ready()) {
     if (turnOn != lastTurn) {
@@ -258,7 +261,6 @@ void loop(){
     }
     
     if (turnOn) {
-
       distanceLimit = getData("/Limit Distance");
       tempLimit = getData("/Limit Temp");
       ldrLimit = getDataFloat("/Limit Ldr");
