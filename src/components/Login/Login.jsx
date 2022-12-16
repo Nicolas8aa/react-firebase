@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import "./Login.css";
-import Typography from "@material-ui/core/Typography";
-import Button from "@material-ui/core/Button";
+import { Typography, Button } from "@mui/material";
 import logo from "./logo.svg";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
@@ -9,12 +8,15 @@ import AccountCircle from "@mui/icons-material/AccountCircle";
 import Lock from "@mui/icons-material/Lock";
 
 import { useNavigate } from "react-router-dom";
+import { login } from "./loginSlice";
 
 import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
+import { useDispatch } from "react-redux";
+import AlertPopup from "../Alerts/AlertPopup";
 
 const Login = () => {
   const [userEmail, setUserEmail] = useState("");
@@ -22,18 +24,22 @@ const Login = () => {
   const [userId, setUserId] = useState("");
   const auth = getAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [alert, setAlert] = useState(null);
 
   const handleSignIn = () => {
     signInWithEmailAndPassword(auth, userEmail, userPassword)
       .then((response) => {
         console.log(response.user);
+        dispatch(login({ uid: response.user.uid }));
         setUserId(response.user.uid);
         localStorage.setItem("userEmail", userEmail);
+
         navigate("/datasensors");
         //change route
       })
       .catch((error) => {
-        alert(error.message);
+        setAlert(error.message);
       });
   };
   const handleSignUp = () => {
@@ -51,7 +57,8 @@ const Login = () => {
     <Box
       sx={{
         bgcolor: "#282c34",
-        minHeight: "100vh",
+        height: "100vh",
+        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -61,6 +68,9 @@ const Login = () => {
         padding: "40px 20px 0 20px",
       }}
     >
+      <AlertPopup open={!!alert} closeFun={() => setAlert(null)} autoClose>
+        {alert}
+      </AlertPopup>
       <Typography variant="h3" component="h2" gutterBottom align="center">
         ESP-32 FIREBASE
       </Typography>
