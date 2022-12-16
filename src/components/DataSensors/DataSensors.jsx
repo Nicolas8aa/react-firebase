@@ -8,9 +8,16 @@ import { getDatabase, ref, set, onValue } from "firebase/database";
 import { Button } from "@mui/material";
 import Slider from "@mui/material/Slider";
 import SendIcon from "@mui/icons-material/Send";
+import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import Brightness5OutlinedIcon from "@mui/icons-material/Brightness5Outlined";
+import CrisisAlertSharpIcon from "@mui/icons-material/CrisisAlertSharp";
+import WifiIcon from "@mui/icons-material/Wifi";
+import { useSelector } from "react-redux";
 
 const DataSensors = () => {
-  const userId = "oWcSC3ftqrbNQX1uWtEF8vAV0Q83";
+  const { uid } = useSelector((state) => state.login);
+  const userId = uid;
   const db = getDatabase();
   const [on, seton] = useState(false);
   const [distance, setDistance] = useState(0);
@@ -19,6 +26,9 @@ const DataSensors = () => {
   const [limitDistance, setLimitDistance] = useState(0);
   const [limitLight, setLimitLight] = useState(0);
   const [limitTemperature, setLimitTemperature] = useState(0);
+  const [limitDistanceFB, setLimitDistanceFB] = useState(0);
+  const [limitLightFB, setLimitLightFB] = useState(0);
+  const [limitTemperatureFB, setLimitTemperatureFB] = useState(0);
 
   const onValueFunction = (ref, setState) => {
     onValue(ref, (snapshot) => {
@@ -27,31 +37,36 @@ const DataSensors = () => {
     });
   };
 
+  const path = "UsersData/" + userId;
+
   useEffect(() => {
-    const onRef = ref(db, "UsersData/" + userId + "/on");
+    const onRef = ref(db, path + "/on");
     onValueFunction(onRef, seton);
-  }, []);
+  }, [path]);
 
   useEffect(() => {
     writeUserData(userId, "/on", on);
   }, [on]);
 
   useEffect(() => {
-    const distanceRef = ref(
-      db,
-      "UsersData/" + userId + "/Sensors/Distance (Cm)"
-    );
+    const distanceRef = ref(db, path + "/Sensors/Distance (Cm)");
     onValueFunction(distanceRef, setDistance);
 
-    const lightRef = ref(db, "UsersData/" + userId + "/Sensors/Ldr (Volts)");
+    const limitDistanceFbRef = ref(db, path + "/Limit Distance");
+    onValueFunction(limitDistanceFbRef, setLimitDistanceFB);
+
+    const lightRef = ref(db, path + "/Sensors/Ldr (Volts)");
     onValueFunction(lightRef, setLight);
 
-    const temperatureRef = ref(
-      db,
-      "UsersData/" + userId + "/Sensors/Temperature (°C)"
-    );
+    const limitLigthFbRef = ref(db, path + "/Limit Ldr");
+    onValueFunction(limitLigthFbRef, setLimitLightFB);
+
+    const temperatureRef = ref(db, path + "/Sensors/Temperature (°C)");
     onValueFunction(temperatureRef, setTemperature);
-  }, [db]);
+
+    const limitTempFbRef = ref(db, path + "/Limit Temp");
+    onValueFunction(limitTempFbRef, setLimitTemperatureFB);
+  }, [db, path]);
 
   function writeUserData(userId, path, data) {
     set(ref(db, "UsersData/" + userId + path), data);
@@ -89,11 +104,17 @@ const DataSensors = () => {
           alignItems: "flex-start",
           justifyContent: "center",
           padding: "20px",
-          margin: "20px",
-          width: "80%",
+          margin: "20px 0",
+          width: "85%",
           maxWidth: "800px",
           border: "1px solid white",
           borderRadius: "10px",
+          "& h2": {
+            width: "50%",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+          },
         }}
       >
         <Box
@@ -101,34 +122,38 @@ const DataSensors = () => {
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-between",
+            alignItems: "center",
             width: "100%",
             margin: "10px 0",
           }}
         >
-          <Typography variant="h5" component="h2" gutterBottom align="center">
+          <Typography variant="h5" component="h2" gutterBottom align="start">
             <ThermostatAutoIcon sx={{ color: "white", margin: "0 10px" }} />
             Temperature : {temperature} °C
           </Typography>
-          <Box sx={{ display: "flex", flexDirection: "row", width: "50%" }}>
+          {temperature > limitTemperatureFB && (
+            <CrisisAlertSharpIcon sx={{ width: "5%" }} />
+          )}
+          <Box sx={{ display: "flex", flexDirection: "row", width: "45%" }}>
             <Slider
               defaultValue={3}
               aria-label="Limit"
               valueLabelDisplay="auto"
               getAriaValueText={(value) => setLimitTemperature(parseInt(value))}
               step={5}
-              sx={{ color: "white", margin: "0 10px", width: "50%" }}
+              sx={{ color: "white", margin: "0 10px", width: "60%" }}
             />
             <Button
               variant="contained"
               endIcon={<SendIcon />}
               sx={{
-                width: "50%",
+                width: "40%",
               }}
               onClick={() =>
                 writeUserData(userId, "/Limit Temp", limitTemperature)
               }
             >
-              Limit
+              Lim {limitTemperatureFB}
             </Button>
           </Box>
         </Box>
@@ -142,30 +167,35 @@ const DataSensors = () => {
             margin: "10px 0",
           }}
         >
-          <Typography variant="h5" component="h2" gutterBottom align="center">
+          <Typography variant="h5" component="h2" gutterBottom align="start">
             <LightModeIcon sx={{ color: "white", margin: "0 10px" }} />
             Light (LDR) : {light.toFixed(1)} Volts
           </Typography>
-          <Box sx={{ display: "flex", flexDirection: "row", width: "50%" }}>
+          {light > limitLightFB ? (
+            <Brightness5OutlinedIcon sx={{ width: "5%" }} />
+          ) : (
+            <DarkModeOutlinedIcon sx={{ width: "5%" }} />
+          )}
+          <Box sx={{ display: "flex", flexDirection: "row", width: "45%" }}>
             <Slider
               defaultValue={3}
               aria-label="Limit"
               valueLabelDisplay="auto"
-              getAriaValueText={(value) => setLimitLight(parseInt(value))}
-              step={1}
+              getAriaValueText={(value) => setLimitLight(parseFloat(value))}
+              step={0.1}
               min={0}
               max={5}
-              sx={{ color: "white", margin: "0 10px", width: "50%" }}
+              sx={{ color: "white", margin: "0 10px", width: "60%" }}
             />
             <Button
               variant="contained"
               endIcon={<SendIcon />}
               sx={{
-                width: "50%",
+                width: "40%",
               }}
               onClick={() => writeUserData(userId, "/Limit Ldr", limitLight)}
             >
-              Limit
+              Lim {limitLightFB}
             </Button>
           </Box>
         </Box>
@@ -179,59 +209,57 @@ const DataSensors = () => {
             margin: "10px 0",
           }}
         >
-          <Typography
-            variant="h5"
-            component="h2"
-            gutterBottom
-            align="center"
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "flex-start",
-              justifyContent: "flex-start",
-            }}
-          >
+          <Typography variant="h5" component="h2" gutterBottom align="start">
             <StraightenIcon sx={{ color: "white", margin: "0 10px" }} />
             Distance : {Math.round(distance)} Cm
           </Typography>
-          <Box sx={{ display: "flex", flexDirection: "row", width: "50%" }}>
+          {distance > limitDistanceFB && (
+            <NotificationsActiveOutlinedIcon sx={{ width: "5%" }} />
+          )}
+          <Box sx={{ display: "flex", flexDirection: "row", width: "45%" }}>
             <Slider
               defaultValue={30}
               aria-label="Limit Distance"
               valueLabelDisplay="auto"
               getAriaValueText={(value) => setLimitDistance(parseInt(value))}
               step={5}
-              sx={{ color: "white", margin: "0 10px", width: "50%" }}
+              sx={{ color: "white", margin: "0 10px", width: "60%" }}
             />
+
             <Button
               variant="contained"
               endIcon={<SendIcon />}
               sx={{
-                width: "50%",
+                width: "40%",
               }}
               onClick={() =>
                 writeUserData(userId, "/Limit Distance", limitDistance)
               }
             >
-              Limit
+              lim {limitDistanceFB}
             </Button>
           </Box>
         </Box>
         <Box
           sx={{
             display: "flex",
-            flexDirection: "column",
+            flexDirection: "row",
             width: "100%",
             margin: "10px 0",
             alignItems: "center",
           }}
         >
+          <Typography variant="h5" component="h2" gutterBottom align="start">
+            <WifiIcon sx={{ color: "white", margin: "0 10px" }} />
+            Toggle ESP32
+          </Typography>
+
           <Button
             variant="contained"
             onClick={handleon}
-            color={on ? "primary" : "secondary"}
+            color={on ? "secondary" : "primary"}
           >
-            {on ? "ON" : "OFF"}
+            {on ? "OFF" : "ON"}
           </Button>
         </Box>
       </Box>

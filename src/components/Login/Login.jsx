@@ -30,11 +30,9 @@ const Login = () => {
   const handleSignIn = () => {
     signInWithEmailAndPassword(auth, userEmail, userPassword)
       .then((response) => {
-        console.log(response.user);
+        //console.log(response.user);
         dispatch(login({ uid: response.user.uid }));
         setUserId(response.user.uid);
-        localStorage.setItem("userEmail", userEmail);
-
         navigate("/datasensors");
         //change route
       })
