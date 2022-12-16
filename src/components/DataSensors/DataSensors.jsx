@@ -213,7 +213,7 @@ const DataSensors = () => {
             <StraightenIcon sx={{ color: "white", margin: "0 10px" }} />
             Distance : {Math.round(distance)} Cm
           </Typography>
-          {distance > limitDistanceFB && (
+          {distance < limitDistanceFB && (
             <NotificationsActiveOutlinedIcon sx={{ width: "5%" }} />
           )}
           <Box sx={{ display: "flex", flexDirection: "row", width: "45%" }}>
@@ -250,8 +250,14 @@ const DataSensors = () => {
           }}
         >
           <Typography variant="h5" component="h2" gutterBottom align="start">
-            <WifiIcon sx={{ color: "white", margin: "0 10px" }} />
-            Toggle ESP32
+            <WifiIcon
+              sx={{
+                color: on ? "green" : "red",
+                margin: "0 10px",
+                transition: "color 0.2s ease-in-out",
+              }}
+            />
+            Toggle ESP32 sensors data
           </Typography>
 
           <Button
