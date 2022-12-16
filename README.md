@@ -249,10 +249,12 @@ float getDataFloat(String path) {
 
 
 void loop(){
-  if (Firebase.RTDB.getInt(&fbdo, userPath + "/on")) {
-      if (fbdo.dataType() == "bool") { turnOn = fbdo.intData(); }
-      }
 
+  if (Firebase.RTDB.getInt(&fbdo, userPath + "/on")) {
+    if (fbdo.dataType() == "boolean") { turnOn = fbdo.boolData(); }
+  }
+  
+  Serial.print(turnOn);
   if (Firebase.ready()) {
     if (turnOn != lastTurn) {
       lastTurn = turnOn;
@@ -261,6 +263,7 @@ void loop(){
     }
     
     if (turnOn) {
+
       distanceLimit = getData("/Limit Distance");
       tempLimit = getData("/Limit Temp");
       ldrLimit = getDataFloat("/Limit Ldr");
@@ -296,5 +299,6 @@ void loop(){
     }
   }
   delay(250);
+}
 ```	
 
